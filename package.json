@@ -1,0 +1,11 @@
+{
+  "name": "tempo-notes",
+  "private": true,
+  "workspaces": ["client", "server"],
+  "scripts": {
+    "dev": "bun run dev:server & bun run dev:client",
+    "dev:server": "cd server && bun run dev",
+    "dev:client": "cd client && bun run dev",
+    "build": "cd client && bun run build"
+  }
+}

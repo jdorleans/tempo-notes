@@ -1,0 +1,317 @@
+/* ── Reset ──────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Base ───────────────────────────────────────────────── */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  font-size: 14px;
+  color: #1a1a1a;
+  background: #e5e7eb;
+}
+
+/* ── App ────────────────────────────────────────────────── */
+.app {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Board ──────────────────────────────────────────────── */
+.board {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  /* Cork-board dot grid */
+  background-color: #d6cfc4;
+  background-image:
+    radial-gradient(circle, #b8b0a5 1px, transparent 1px),
+    radial-gradient(circle, #b8b0a5 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position:
+    0 0,
+    14px 14px;
+  /* Prevent text selection while dragging */
+  user-select: none;
+}
+
+/* ── Note ───────────────────────────────────────────────── */
+.note {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  border-radius: 2px;
+  background: var(--note-bg, #fef9c3);
+  box-shadow:
+    3px 3px 10px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+  transition:
+    box-shadow 0.15s ease,
+    opacity 0.15s ease,
+    transform 0.1s ease;
+  min-width: 150px;
+  min-height: 100px;
+  /* Slightly natural tilt via border */
+  outline: none;
+}
+
+/* Paper fold effect on bottom-right corner */
+.note::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 0 18px 18px;
+  border-color: transparent transparent rgba(0, 0, 0, 0.12) transparent;
+  border-radius: 0 0 2px 0;
+}
+
+.note--dragging {
+  box-shadow:
+    12px 12px 32px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(0, 0, 0, 0.1);
+  transform: rotate(1.5deg) scale(1.02);
+  z-index: 1000 !important;
+  opacity: 0.92;
+}
+
+.note--over-trash {
+  opacity: 0.45;
+  box-shadow:
+    4px 4px 16px rgba(239, 68, 68, 0.4),
+    0 0 0 2px #ef4444;
+  transform: rotate(-2deg) scale(0.97);
+}
+
+/* ── Note Header (drag handle) ──────────────────────────── */
+.note__header {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 8px;
+  cursor: grab;
+  border-radius: 2px 2px 0 0;
+  /* Slightly darker tint of the note color */
+  background: rgba(0, 0, 0, 0.08); /* fallback */
+  background: color-mix(in srgb, var(--note-bg, #fef9c3) 80%, #000 20%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.note__header:active {
+  cursor: grabbing;
+}
+
+/* Color dot button in header */
+.note__color-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
+  flex-shrink: 0;
+}
+
+.note__color-btn:hover {
+  transform: scale(1.25);
+  border-color: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Note Content ───────────────────────────────────────── */
+.note__content {
+  flex: 1;
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 10px 12px 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  font-family: inherit;
+  cursor: text;
+  color: #2a2a2a;
+  background: transparent;
+  /* Slightly more readable on colored backgrounds */
+}
+
+.note__content::placeholder {
+  color: rgba(0, 0, 0, 0.28);
+  font-style: italic;
+}
+
+/* ── Resize Handle ──────────────────────────────────────── */
+.note__resize {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  z-index: 2;
+}
+
+/* Triangle grip indicator */
+.note__resize::before {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 0 9px 9px;
+  border-color: transparent transparent rgba(0, 0, 0, 0.25) transparent;
+}
+
+/* ── Color Picker ───────────────────────────────────────── */
+.color-picker {
+  position: absolute;
+  top: 34px;
+  left: 8px;
+  display: flex;
+  gap: 7px;
+  padding: 8px 10px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+  z-index: 200;
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    border-color 0.12s,
+    box-shadow 0.12s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.color-swatch:hover {
+  transform: scale(1.3);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.color-swatch--active {
+  border-color: rgba(0, 0, 0, 0.5);
+  transform: scale(1.15);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Trash Zone ─────────────────────────────────────────── */
+.trash-zone {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+  min-width: 80px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 2px dashed #d1d5db;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  opacity: 0.25;
+  pointer-events: none;
+  transition:
+    opacity 0.2s,
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+  z-index: 500;
+}
+
+.trash-zone--active {
+  opacity: 1;
+  border-color: #9ca3af;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.trash-zone--over {
+  background: rgba(254, 226, 226, 0.97);
+  border-color: #ef4444;
+  border-style: solid;
+  transform: scale(1.08);
+}
+
+.trash-zone__icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.trash-zone__label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.trash-zone--over .trash-zone__label {
+  color: #dc2626;
+}
+
+/* ── Ghost preview while creating ──────────────────────── */
+.note-ghost {
+  position: absolute;
+  border: 2px dashed rgba(0, 0, 0, 0.3);
+  border-radius: 2px;
+  background: rgba(254, 249, 195, 0.5); /* fallback */
+  background: color-mix(in srgb, var(--note-bg, #fef9c3) 50%, transparent 50%);
+  pointer-events: none;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Board hint ─────────────────────────────────────────── */
+.board-hint {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 14px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
